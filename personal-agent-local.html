@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Agent</title>
+</head>
+<body>
+
+  <h2>Personal Agent</h2>
+  <hr>
+
+  <!-- STEP 1: Paste your Anthropic API key here -->
+  <label><b>Your Anthropic API Key:</b></label>
+  <br>
+  <input id="apiKey" type="password" size="60" placeholder="sk-ant-..." />
+  <hr>
+
+  <!-- STEP 2: Chat window -->
+  <div id="chat" style="height:400px; overflow-y:auto; border:1px solid black; padding:8px;"></div>
+
+  <br>
+
+  <!-- STEP 3: Message input -->
+  <textarea id="input" rows="3" cols="60" placeholder="Type your message... (Enter to send)"></textarea>
+  <br>
+  <button onclick="send()">Send</button>
+
+  <script>
+
+    // ─── MEMORY: stores the full conversation ───────────────────
+    const history = [];
+
+    // ─── SYSTEM PROMPT: defines how the agent behaves ───────────
+    const SYSTEM = `You are a helpful personal agent. Be clear and concise.
+Always end your reply with a "Next steps:" section listing 1-3 short suggestions.`;
+
+    // ─── WELCOME MESSAGE ────────────────────────────────────────
+    document.getElementById("chat").innerHTML =
+      "<p><b>Agent:</b> Hello! Paste your API key above, then ask me anything.</p><hr>";
+
+    // ─── ENTER KEY TO SEND ──────────────────────────────────────
+    document.getElementById("input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+
+    // ─── MAIN SEND FUNCTION ─────────────────────────────────────
+    async function send() {
+      const apiKey = document.getElementById("apiKey").value.trim();
+      const input  = document.getElementById("input");
+      const chat   = document.getElementById("chat");
+      const text   = input.value.trim();
+
+      // Validation
+      if (!apiKey) {
+        alert("Please paste your Anthropic API key first.");
+        return;
+      }
+      if (!text) return;
+
+      // Show user message in chat
+      chat.innerHTML += "<p><b>You:</b> " + text + "</p>";
+      input.value = "";
+      history.push({ role: "user", content: text });
+
+      // Show thinking indicator
+      chat.innerHTML += "<p id='typing'><i>Agent is thinking...</i></p>";
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+
+        // ─── API CALL ──────────────────────────────────────────
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,                   // your API key goes here
+            "anthropic-version": "2023-06-01",     // required header for local use
+            "anthropic-dangerous-direct-browser-access": "true"  // allows browser calls
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",     // which Claude model to use
+            max_tokens: 1000,                       // max length of reply
+            system: SYSTEM,                         // agent personality
+            messages: history                       // full conversation history
+          })
+        });
+
+        // ─── PARSE RESPONSE ────────────────────────────────────
+        const data  = await res.json();
+
+        // Handle API errors (wrong key, quota, etc.)
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        const reply = data.content.find(b => b.type === "text").text;
+
+        // Save agent reply to history so agent remembers it
+        history.push({ role: "assistant", content: reply });
+
+        // Display reply
+        document.getElementById("typing").remove();
+        chat.innerHTML += "<p><b>Agent:</b> " + reply.replace(/\n/g, "<br>") + "</p><hr>";
+
+      } catch (e) {
+        document.getElementById("typing").remove();
+        chat.innerHTML += "<p><b>Error:</b> " + e.message + "</p>";
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+  </script>
+
+</body>
+</html>
