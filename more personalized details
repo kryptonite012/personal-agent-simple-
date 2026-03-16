@@ -1,3 +1,24 @@
-ib will be addinfg more features 
-after my exams 
+Personal AI Agent (Browser-Based)
 
+A lightweight browser-based personal AI assistant built using HTML, JavaScript, and the Anthropic Claude API.
+This project allows users to interact with an AI agent directly from the browser by entering their own Anthropic API key, making it simple, secure, and fully client-side.
+
+The agent maintains conversation history, responds intelligently using Claude models, and provides helpful suggestions through a built-in Next Steps recommendation system.
+
+Project Overview
+
+The Personal Agent is a minimal yet functional AI chat interface that demonstrates how to connect a frontend web application to a large language model API.
+
+Instead of requiring a backend server, the project runs entirely in the browser and sends requests directly to the Anthropic API. This makes it easy to experiment with AI-powered assistants without complex setup.
+
+Users can paste their API key, ask questions, and receive responses instantly while the system remembers previous messages to maintain conversation context.
+
+Tech Stack
+
+HTML5 – Structure of the application
+
+JavaScript (Vanilla JS) – Logic and API interaction
+
+Anthropic Claude API – AI language model responses
+
+Fetch API – Sending HTTP requests to the AI service
